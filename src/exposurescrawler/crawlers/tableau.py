@@ -94,6 +94,7 @@ def retrieve_all_user_id_map(tableau_client: TableauRestClient):
 
 def tableau_crawler(
         manifest_path: str,
+        yaml_path: str,
         dbt_package_name: str,
         tableau_projects_to_ignore: Collection[str],
         verbose: bool,
@@ -115,16 +116,17 @@ def tableau_crawler(
     # Configure the Tableau REST client
     tableau_client = TableauRestClient(
         os.environ['TABLEAU_URL'],
-        os.environ['TABLEAU_USERNAME'],
-        os.environ['TABLEAU_PASSWORD'],
+        os.environ['TABLEAU_TOKEN_NAME'],
+        os.environ['TABLEAU_TOKEN_VALUE'],
+        os.environ['TABLEAU_SITE_ID'],
     )
 
     # Retrieve custom SQLs and find model references
-    workbooks_custom_sqls = retrieve_custom_sql(tableau_client, 'snowflake')
+    workbooks_custom_sqls = retrieve_custom_sql(tableau_client, 'redshift')
     workbooks_custom_sql_models = _parse_tables_from_sql(workbooks_custom_sqls, models)
 
     # Retrieve native SQLs and find model references
-    workbooks_native_sqls = retrieve_native_sql(tableau_client, 'snowflake')
+    workbooks_native_sqls = retrieve_native_sql(tableau_client, 'redshift')
     workbooks_native_sql_models = _parse_tables_from_sql(workbooks_native_sqls, models)
 
     # Merge the results by chaining the iterables
@@ -168,6 +170,8 @@ def tableau_crawler(
         manifest.add_exposure(exposure, found)
     # Persist the modified manifest
     logger().info('')
+    logger().info(f'💾 Writing YML files on: {yaml_path}')
+    manifest.generate_yml(yaml_path)
     logger().info(f'💾 Writing results to file: {manifest_path}')
     manifest.save(manifest_path)
 
@@ -178,6 +182,13 @@ def tableau_crawler(
     required=True,
     metavar='PATH',
     help='The path to the dbt manifest artifact',
+)
+@click.option(
+    '--yaml-path',
+    required=False,
+    metavar='PATH',
+    default='./',
+    help='The path to save the exposures files. Default is the current directory.',
 )
 @click.option(
     '--dbt-package-name',
@@ -195,11 +206,12 @@ def tableau_crawler(
 @click.option('-v', '--verbose', is_flag=True, default=False, help='Enable verbose logging')
 def tableau_crawler_command(
         manifest_path: str,
+        yaml_path: str,
         dbt_package_name: str,
         tableau_projects_to_ignore: Collection[str],
         verbose: bool,
 ):
-    tableau_crawler(manifest_path, dbt_package_name, tableau_projects_to_ignore, verbose)
+    tableau_crawler(manifest_path, yaml_path, dbt_package_name, tableau_projects_to_ignore, verbose)
 
 
 if __name__ == '__main__':

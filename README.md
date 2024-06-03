@@ -24,7 +24,7 @@ package, but it doesn't mean that other dbt and Tableau versions will not work.
 
 | dbt-exposures-crawler | dbt version |        Tableau version         | SQL dialect |
 |:---------------------:|:-----------:|:------------------------------:|:-----------:|
-|     0.1.4 - 0.1.5     |  1.1 - 1.4  | Tableau Server 2022.1 - 2023.1 |  Snowflake  |
+|     0.1.4 - 0.1.5     |     1.7     |         Tableau Online         |   Redshift  |
 
 ## Installation
 

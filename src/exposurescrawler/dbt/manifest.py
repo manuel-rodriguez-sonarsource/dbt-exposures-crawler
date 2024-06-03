@@ -1,4 +1,6 @@
 import json
+import yaml
+import os
 from collections import UserDict
 from typing import Any, Dict, Type
 
@@ -41,6 +43,41 @@ class DbtManifest(UserDict):
 
     def to_dict(self):
         return self.data
+
+    def generate_yml(self, path):
+        for exposure_name in self['exposures']:
+            exposures = []
+            exposure = self['exposures'][exposure_name]
+            if exposure.get('path') == None:
+                filename = exposure['unique_id'].split('.')[-1] + '.yml'
+                transformed_exposure = {
+                    'name': exposure['name'],
+                    'label': exposure.get('label',''),
+                    'type': exposure['type'].lower(),
+                    'tags': exposure.get('tags',''),
+                    'maturity': exposure.get('maturity','low'),
+                    'url': exposure.get('url',''),
+                    'description': exposure.get('description',''),
+                    'depends_on': [f'ref(\'{node.split(".")[-1]}\')' for node in exposure.get('depends_on', {}).get('nodes', [])],
+                    'owner': exposure['owner']
+                }
+                # If the unique_id starts with tableau we need to adjust the filename to save it inside the tableau folder
+                if exposure['name'].startswith('tableau'):
+                    filename = 'tableau/' + filename
+                    # Check if the path exsist and if not create a tableau folder
+                    if not os.path.exists(path + 'tableau/'):
+                        os.makedirs(path + 'tableau/')
+                exposures.append(transformed_exposure)
+
+                data = {
+                    'version': 2,
+                    'exposures': exposures
+                }
+
+                with open(path + filename, 'w') as file:
+                    yaml.safe_dump(data, file, default_flow_style=False, sort_keys=False)
+
+
 
     def save(self, path):
         with open(path, 'w') as file:
