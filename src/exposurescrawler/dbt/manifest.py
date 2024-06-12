@@ -54,11 +54,11 @@ class DbtManifest(UserDict):
                     'name': exposure['name'],
                     'label': exposure.get('label',''),
                     'type': exposure['type'].lower(),
-                    'tags': exposure.get('tags',''),
+                    'tags': sorted(exposure.get('tags','')),
                     'maturity': exposure.get('maturity','low'),
                     'url': exposure.get('url',''),
                     'description': exposure.get('description',''),
-                    'depends_on': [f'ref(\'{node.split(".")[-1]}\')' for node in exposure.get('depends_on', {}).get('nodes', [])],
+                    'depends_on': [f'ref(\'{node.split(".")[-1]}\')' for node in sorted(exposure.get('depends_on', {}).get('nodes', []))],
                     'owner': exposure['owner']
                 }
                 # If the unique_id starts with tableau we need to adjust the filename to save it inside the tableau folder

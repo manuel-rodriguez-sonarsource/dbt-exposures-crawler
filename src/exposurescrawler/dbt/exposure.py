@@ -44,12 +44,10 @@ class DbtExposure:
         **Access**: [Link to Tableau]({url})
 
         **Created at**: {created_at}\n
-        **Last updated at**: {updated_at}
         '''.format(
             project=workbook.project_name,
             name=workbook.name,
             description=workbook.description or '*no description*',
-            updated_at=workbook.updated_at,
             created_at=workbook.created_at,
             url=url,
         )
