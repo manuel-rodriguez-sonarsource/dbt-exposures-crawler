@@ -1,8 +1,30 @@
-[build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
-
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
+
+[tool.poetry]
+name = "exposurescrawler"
+version = "1.0.0"
+description = "This repository contains the code for the dbt models running in the Sonar's Data Platform"
+authors = ["Data Team <data@sonarsource.com>"]
+license = "Copyright (C) SonarSource SA - All rights reserved - mailto:info AT sonarsource DOT com"
+readme = "README.md"
+package-mode = true
+
+[tool.poetry.dependencies]
+python = "^3.9"
+click = '~= 8.0.1'
+python-slugify = '~= 4.0.1'
+tableauserverclient = '~= 0.10'
+pyyaml = "^6.0.1"
+
+
+[[tool.poetry.source]]
+name = "repox"
+url = "https://repox.jfrog.io/artifactory/api/pypi/sonarsource-pypi/simple"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 skip-string-normalization = true
