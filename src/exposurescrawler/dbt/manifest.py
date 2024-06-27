@@ -5,6 +5,7 @@ from collections import UserDict
 from typing import Any, Dict, Type
 
 from exposurescrawler.dbt.exposure import DbtExposure
+from exposurescrawler.dbt.dbt_rest import DbtRest
 
 
 class DbtManifest(UserDict):
@@ -13,6 +14,12 @@ class DbtManifest(UserDict):
         with open(path) as file:
             manifest = json.load(file)
 
+        return cls(manifest)
+
+    @classmethod
+    def from_api(cls: Type['DbtManifest'], account_id, token, job_id) -> 'DbtManifest':
+        dbt_rest = DbtRest(account_id, token)
+        manifest = dbt_rest.fetch_manifest(job_id)
         return cls(manifest)
 
     def retrieve_models_and_sources(self) -> Dict[str, Any]:
@@ -52,14 +59,17 @@ class DbtManifest(UserDict):
                 filename = exposure['unique_id'].split('.')[-1] + '.yml'
                 transformed_exposure = {
                     'name': exposure['name'],
-                    'label': exposure.get('label',''),
+                    'label': exposure.get('label', ''),
                     'type': exposure['type'].lower(),
-                    'tags': sorted(exposure.get('tags','')),
-                    'maturity': exposure.get('maturity','low'),
-                    'url': exposure.get('url',''),
-                    'description': exposure.get('description',''),
-                    'depends_on': [f'ref(\'{node.split(".")[-1]}\')' for node in sorted(exposure.get('depends_on', {}).get('nodes', []))],
-                    'owner': exposure['owner']
+                    'tags': sorted(exposure.get('tags', '')),
+                    'maturity': exposure.get('maturity', 'low'),
+                    'url': exposure.get('url', ''),
+                    'description': exposure.get('description', ''),
+                    'depends_on': [
+                        f'ref(\'{node.split(".")[-1]}\')'
+                        for node in sorted(exposure.get('depends_on', {}).get('nodes', []))
+                    ],
+                    'owner': exposure['owner'],
                 }
                 # If the unique_id starts with tableau we need to adjust the filename to save it inside the tableau folder
                 if exposure['name'].startswith('tableau'):
@@ -69,15 +79,10 @@ class DbtManifest(UserDict):
                         os.makedirs(path + 'tableau/')
                 exposures.append(transformed_exposure)
 
-                data = {
-                    'version': 2,
-                    'exposures': exposures
-                }
+                data = {'version': 2, 'exposures': exposures}
 
                 with open(path + filename, 'w') as file:
                     yaml.safe_dump(data, file, default_flow_style=False, sort_keys=False)
-
-
 
     def save(self, path):
         with open(path, 'w') as file:

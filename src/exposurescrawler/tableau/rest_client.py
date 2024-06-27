@@ -9,9 +9,10 @@ class TableauRestClient:
 
     def __init__(self, url: str, token_name: str, token_value: str, contentsite: str):
 
-        self.tableau_auth = TSC.PersonalAccessTokenAuth(token_name, token_value, site_id=contentsite)
+        self.tableau_auth = TSC.PersonalAccessTokenAuth(
+            token_name, token_value, site_id=contentsite
+        )
         self.server = TSC.Server(url, use_server_version=True)
-
 
     @lru_cache(maxsize=None)
     def retrieve_workbook(self, workbook_id: str):

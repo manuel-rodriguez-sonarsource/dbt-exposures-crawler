@@ -93,11 +93,11 @@ def retrieve_all_user_id_map(tableau_client: TableauRestClient):
 
 
 def tableau_crawler(
-        manifest_path: str,
-        yaml_path: str,
-        dbt_package_name: str,
-        tableau_projects_to_ignore: Collection[str],
-        verbose: bool,
+    manifest_path: str,
+    yaml_path: str,
+    dbt_package_name: str,
+    tableau_projects_to_ignore: Collection[str],
+    verbose: bool,
 ) -> None:
     # Enable verbose logging
     if verbose:
@@ -107,8 +107,12 @@ def tableau_crawler(
     manifest_path = os.path.expandvars(manifest_path)
     manifest_path = os.path.expanduser(manifest_path)
 
-    # Parse the dbt manifest JSON file
-    manifest: DbtManifest = DbtManifest.from_file(manifest_path)
+    # Parse the dbt manifest JSON file from the dbt Cloud API
+    manifest: DbtManifest = DbtManifest.from_api(
+        os.environ['DBT_ACCOUNT_ID'],
+        os.environ['DBT_TOKEN'],
+        os.environ['DBT_JOB_ID']
+    )
 
     # Retrieve all models
     models = manifest.retrieve_models_and_sources()
@@ -135,7 +139,7 @@ def tableau_crawler(
     workbooks_models: WorkbookModelsMapping = {}
 
     for workbook_reference, found in itertools.chain(
-            workbooks_custom_sql_models.items(), workbooks_native_sql_models.items()
+        workbooks_custom_sql_models.items(), workbooks_native_sql_models.items()
     ):
         workbooks_models.setdefault(workbook_reference, []).extend(found)
 
@@ -195,7 +199,7 @@ def tableau_crawler(
     required=True,
     metavar='PROJECT_NAME',
     help='The name of the dbt pacakge where the exposures should be added. If in doubt, check the '
-         'name of your dbt project on dbt_project.yml',
+    'name of your dbt project on dbt_project.yml',
 )
 @click.option(
     '--tableau-ignore-projects',
@@ -205,13 +209,15 @@ def tableau_crawler(
 )
 @click.option('-v', '--verbose', is_flag=True, default=False, help='Enable verbose logging')
 def tableau_crawler_command(
-        manifest_path: str,
-        yaml_path: str,
-        dbt_package_name: str,
-        tableau_projects_to_ignore: Collection[str],
-        verbose: bool,
+    manifest_path: str,
+    yaml_path: str,
+    dbt_package_name: str,
+    tableau_projects_to_ignore: Collection[str],
+    verbose: bool,
 ):
-    tableau_crawler(manifest_path, yaml_path, dbt_package_name, tableau_projects_to_ignore, verbose)
+    tableau_crawler(
+        manifest_path, yaml_path, dbt_package_name, tableau_projects_to_ignore, verbose
+    )
 
 
 if __name__ == '__main__':
